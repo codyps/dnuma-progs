@@ -1,0 +1,63 @@
+#! /bin/sh
+
+D=/sys/kernel/debug
+M=$D/memlayout
+if [ -z "$T" ]; then
+	T=$D/trace
+fi
+N=/sys/devices/system/node/possible
+
+usage() {
+	echo "usage: $(basename $0) <action> <item> <item args>..."
+	echo " <action> = {enable|disable|show|clear}"
+	echo " <items> = ..."
+	echo " cache"
+	echo "       track the memlayout cache performance"
+	echo " transplant"
+	echo "       examine the transplant process"
+	exit 1
+}
+
+debug () {
+	[ -n "$DEBUG" ]
+}
+
+dbg () {
+	debug && echo "$@"
+}
+
+fatal () {
+	echo "$@"
+	echo 1 > "$M/clear"
+	exit 1
+}
+
+cache_enable () {
+	echo "memlayout_cache*" >$T/set_event
+}
+
+cache_show () {
+	awk '
+	BEGIN { sum[1024][2]; }
+	/^[^#]/ {
+		if ($6 == "memlayout" && $8 == "cache") {
+			ml = $7;
+			sum[ml][$9 == "hit"] = sum[ml][$9 == "hit"] + 1;
+		}
+	}
+	END {
+		for (s in sum) {
+			print s
+		}
+	}' < $T
+}
+
+[ $# -lt 2 ] && usage
+action=$1; shift
+item=$1; shift
+case $action in
+e*|s*)
+	"${item}_${action}" "$@"
+	;;
+*)	usage ;;
+esac
