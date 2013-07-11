@@ -2,7 +2,7 @@
 TARGETS = dnuma-trace-2
 obj-dnuma-trace-2 = dnuma-trace.o
 
-include "base.mk"
+include base.mk
 
 .PHONY: install-dnuma
 install-dnuma:
@@ -11,3 +11,4 @@ install-dnuma:
 	cp bin/meminfo    $(BINDIR)/meminfo && \
 	cp bin/dnuma-stats $(BINDIR)/dnuma-stats
 
+install : install-dnuma
